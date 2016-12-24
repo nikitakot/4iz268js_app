@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>kotn01 - jsapp</title>
+    <style>
+        #map {
+            width: 98%;
+            height: 500px;
+            background-color: grey;
+            border-color: aquamarine;
+            border-width: 5px;
+            border-style: solid;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+<!--<script src="app.js"></script>-->
+<h3>My Google Maps Demo</h3>
+<div id="map"></div>
+<script>
+    //creating variable for map and array for markers
+    var map;
+    var markers = [];
+    var uniqueId = 0;
+    //initializing the map
+    function initMap() {
+        //initializing the map variable
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 0, lng: 0},
+            zoom: 4
+        });
+
+        //current geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                placeMarker(pos, false, "current position");
+                map.setZoom(18);
+                map.setCenter(pos);
+            }, function () {
+                handleLocationError(true);
+            });
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false);
+        }
+        //eventListener for creating new markers
+        map.addListener('click', function (e) {
+            placeMarker(e.latLng, true);
+        });
+    }
+    //function for creating markers on the map
+    function placeMarker(position, draggable, text) {
+        var marker = new google.maps.Marker({
+            position: position,
+            animation: google.maps.Animation.DROP,
+            label: text,
+            map: map,
+            draggable: draggable
+        });
+        //adding id for the marker
+        marker.id = uniqueId;
+        uniqueId++;
+        //pushing marker to the array
+        markers.push(marker);
+        //for each marker adding listener for removing
+        marker.addListener('rightclick', function () {
+            deleteMarker(marker.id);
+        });
+        //listener for adding a small note above the marker
+        marker.addListener('click', function () {
+            var label = prompt("Enter a note");
+            if (label != null) {
+                marker.label = label;
+                marker.setMap(map);
+            }
+        });
+    }
+    //removing the marker from the map
+    function deleteMarker(id) {
+        //find and remove the marker from the Array
+        for (var i = 0; i < markers.length; i++) {
+            if (markers[i].id == id) {
+                //remove the marker from Map
+                markers[i].setMap(null);
+                //remove the marker from array.
+                markers.splice(i, 1);
+                return;
+            }
+        }
+    }
+    //geolocation error
+    function handleLocationError(browserHasGeolocation) {
+        alert(browserHasGeolocation ?
+            'Error: The Geolocation service failed.' :
+            'Error: Your browser doesn\'t support geolocation.');
+    }
+</script>
+<!--downloading google maps api-->
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC3nbnmwNbeRx7T32llhCSRtPsZyjx-jj8&callback=initMap">
+</script>
+</body>
+</html>
