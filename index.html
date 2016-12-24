@@ -14,16 +14,33 @@
             margin: auto;
         }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 </head>
 <body>
 <!--<script src="app.js"></script>-->
-<h3>My Google Maps Demo</h3>
+<h3 id="1">My Google Maps Demo</h3>
 <div id="map"></div>
 <script>
     //creating variable for map and array for markers
     var map;
     var markers = [];
+    //    var savedData = JSON.parse(localStorage.getItem("savedData"));
+    //    console.log(savedData);
+    //    if (savedData != "") {
+    //        markers = savedData;
+    //    }
     var uniqueId = 0;
+    var savedData;
+    window.onbeforeunload = function (e) {
+
+        for (i = 0; i < markers.length; i++) {
+            savedData.push(markers[i].getInfo());
+        }
+        console.log(savedData);
+        localStorage.setItem("savedData", JSON.stringify(savedData));
+        return 'Close the tab?';
+    };
+
     //initializing the map
     function initMap() {
         //initializing the map variable
@@ -31,6 +48,16 @@
             center: {lat: 0, lng: 0},
             zoom: 4
         });
+        savedData = JSON.parse(localStorage.getItem("savedData"));
+
+        for (i = 0; i < savedData.length; i++) {
+            placeMarker(savedData[i][0],savedData[i][1],savedData[i][2]);
+        }
+
+
+        for (i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
 
         //current geolocation
         if (navigator.geolocation) {
@@ -40,7 +67,7 @@
                     lng: position.coords.longitude
                 };
 
-                placeMarker(pos, false, "current position");
+                placeMarker(pos, false, "Geolocation " + new Date());
                 map.setZoom(18);
                 map.setCenter(pos);
             }, function () {
@@ -62,13 +89,25 @@
             animation: google.maps.Animation.DROP,
             label: text,
             map: map,
-            draggable: draggable
+            draggable: draggable,
+            getInfo: function () {
+                console.log(marker.position, marker.draggable, marker.label);
+                return [marker.position, marker.draggable, marker.label];
+            }
         });
         //adding id for the marker
         marker.id = uniqueId;
         uniqueId++;
+
+        //
+//        marker.getInfo = function () {
+//            console.log();
+//            return [marker.position, draggable, marker.label.toString()];
+//        };
+
         //pushing marker to the array
         markers.push(marker);
+        //localStorage.setItem("savedData", JSON.stringify(markers));
         //for each marker adding listener for removing
         marker.addListener('rightclick', function () {
             deleteMarker(marker.id);
