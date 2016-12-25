@@ -13,13 +13,36 @@
             border-style: solid;
             margin: auto;
         }
+
+        #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 40%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto', 'sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+        }
     </style>
+    <!--jquery-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!--w3school styles-->
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
 </head>
 <body>
 <!--<script src="app.js"></script>-->
-<h3 id="1">My Google Maps Demo</h3>
+<div id="floating-panel">
+    <input onclick="findMe();" type=button value="Geolocation">
+    <input onclick="deleteMarkers();" type=button value="Delete All Markers">
+    <input onclick="manual();" type=button value="Manual">
+</div>
 <div id="map"></div>
+<div id="list" class="w3-container"></div>
+
 <script>
     //creating variable for map and array for markers
     var map;
@@ -34,7 +57,7 @@
         localStorage.clear();
         savedData = [];
         //pushing coordinates, draggable and text information to savedData array
-        for (i = 0; i < markers.length; i++) {
+        for (var i = 0; i < markers.length; i++) {
             savedData.push(markers[i].getInfo());
         }
         console.log(savedData);
@@ -52,34 +75,19 @@
         });
         //parsing localstorage to savedData variable
         savedData = JSON.parse(localStorage.getItem("savedData"));
+        console.log(savedData);
         //drawing markers on the map from savedData variables
         if (savedData != null) {
-            for (i = 0; i < savedData.length; i++) {
+            for (var i = 0; i < savedData.length; i++) {
                 placeMarker(savedData[i][0], savedData[i][1], savedData[i][2]);
             }
         }
-        //current geolocation
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                var pos = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                placeMarker(pos, false, "Geolocation " + new Date());
-                map.setZoom(18);
-                map.setCenter(pos);
-            }, function () {
-                handleLocationError(true);
-            });
-        } else {
-            // Browser doesn't support Geolocation
-            handleLocationError(false);
-        }
-
         //eventListener for creating new markers
         map.addListener('click', function (e) {
             placeMarker(e.latLng, true);
         });
+        //refreshing the list w/ markers
+        markersList();
     }
 
     //function for creating markers on the map
@@ -113,8 +121,12 @@
             if (label != null) {
                 marker.label = label;
                 marker.setMap(map);
+                //refreshing the list
+                markersList();
             }
         });
+        //refreshing the list
+        markersList();
     }
     //removing the marker from the map
     function deleteMarker(id) {
@@ -125,15 +137,78 @@
                 markers[i].setMap(null);
                 //remove the marker from array.
                 markers.splice(i, 1);
+                //refreshing the list
+                markersList();
                 return;
             }
         }
     }
+
     //geolocation error
     function handleLocationError(browserHasGeolocation) {
         alert(browserHasGeolocation ?
             'Error: The Geolocation service failed.' :
             'Error: Your browser doesn\'t support geolocation.');
+    }
+    //function for creating/refreshing list w/markers
+    function markersList() {
+        //clearing the list
+        $("#list").empty();
+        //creating table
+        var table = $("<table/>").addClass("w3-table-all");
+        //creating the first row
+        var row = $("<tr/>").addClass("w3-hover-green");
+        row.append($('<th/>').text("ID"));
+        row.append($('<th/>').text("Note"));
+        table.append(row);
+        //creating next rows with data from markers
+        for (var i = 0; i < markers.length; i++) {
+            row = $("<tr/>").addClass("w3-hover-blue");
+            row.append($('<td/>').text(i));
+            row.append($('<td/>').text(markers[i].label));
+            //eventlistener for the each row
+            row.click(function (e) {
+                //console.log($(this).children().first().text());
+                map.panTo(markers[$(this).children().first().text()].getPosition());
+            });
+            table.append(row);
+        }
+        //putting table to the html container
+        $("#list").append(table);
+    }
+    //deleting all markers from the map
+    function deleteMarkers() {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+        markersList();
+    }
+    //geolocation function
+    function findMe() {
+        //current geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                placeMarker(pos, false, "Geolocation " + new Date());
+                map.setZoom(18);
+                map.setCenter(pos);
+            }, function () {
+                handleLocationError(true);
+            });
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false);
+        }
+    }
+    //func for displaying manual
+    function manual() {
+        alert("leftclick on a map - place a marker\n" +
+            "rightclick on the marker - delete the marker\n" +
+            "leftclick the on marker - add a note");
     }
 </script>
 <!--downloading google maps api-->
