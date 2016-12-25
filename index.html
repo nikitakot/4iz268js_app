@@ -81,6 +81,7 @@
             placeMarker(e.latLng, true);
         });
     }
+
     //function for creating markers on the map
     function placeMarker(position, draggable, text) {
         var marker = new google.maps.Marker({
@@ -89,12 +90,12 @@
             label: text,
             map: map,
             draggable: draggable,
+            //getter for getting info for localstorage
             getInfo: function () {
                 console.log(this.position, this.draggable, this.label);
                 return [this.position, this.draggable, this.label];
             }
         });
-
 
         //adding id for the marker
         marker.id = uniqueId;
@@ -102,7 +103,6 @@
 
         //pushing marker to the array
         markers.push(marker);
-        //localStorage.setItem("savedData", JSON.stringify(markers));
         //for each marker adding listener for removing
         marker.addListener('rightclick', function () {
             deleteMarker(marker.id);
