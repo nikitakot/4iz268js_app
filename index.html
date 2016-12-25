@@ -24,23 +24,25 @@
     //creating variable for map and array for markers
     var map;
     var markers = [];
-    //    var savedData = JSON.parse(localStorage.getItem("savedData"));
-    //    console.log(savedData);
-    //    if (savedData != "") {
-    //        markers = savedData;
-    //    }
+    //creating id variable
     var uniqueId = 0;
+    //temp variable for storing data in localstorage
     var savedData;
-    window.onbeforeunload = function (e) {
-
+    //saving data to localstorage when the tab is closing
+    window.onbeforeunload = function () {
+        //clearing localstorage and savedData
+        localStorage.clear();
+        savedData = [];
+        //pushing coordinates, draggable and text information to savedData array
         for (i = 0; i < markers.length; i++) {
             savedData.push(markers[i].getInfo());
         }
         console.log(savedData);
+        //stringifying savedData to localStorage
         localStorage.setItem("savedData", JSON.stringify(savedData));
+        console.log(localStorage);
         return 'Close the tab?';
     };
-
     //initializing the map
     function initMap() {
         //initializing the map variable
@@ -48,17 +50,14 @@
             center: {lat: 0, lng: 0},
             zoom: 4
         });
+        //parsing localstorage to savedData variable
         savedData = JSON.parse(localStorage.getItem("savedData"));
-
-        for (i = 0; i < savedData.length; i++) {
-            placeMarker(savedData[i][0],savedData[i][1],savedData[i][2]);
+        //drawing markers on the map from savedData variables
+        if (savedData != null) {
+            for (i = 0; i < savedData.length; i++) {
+                placeMarker(savedData[i][0], savedData[i][1], savedData[i][2]);
+            }
         }
-
-
-        for (i = 0; i < markers.length; i++) {
-            markers[i].setMap(map);
-        }
-
         //current geolocation
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function (position) {
@@ -66,7 +65,6 @@
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
                 };
-
                 placeMarker(pos, false, "Geolocation " + new Date());
                 map.setZoom(18);
                 map.setCenter(pos);
@@ -77,6 +75,7 @@
             // Browser doesn't support Geolocation
             handleLocationError(false);
         }
+
         //eventListener for creating new markers
         map.addListener('click', function (e) {
             placeMarker(e.latLng, true);
@@ -91,19 +90,15 @@
             map: map,
             draggable: draggable,
             getInfo: function () {
-                console.log(marker.position, marker.draggable, marker.label);
-                return [marker.position, marker.draggable, marker.label];
+                console.log(this.position, this.draggable, this.label);
+                return [this.position, this.draggable, this.label];
             }
         });
+
+
         //adding id for the marker
         marker.id = uniqueId;
         uniqueId++;
-
-        //
-//        marker.getInfo = function () {
-//            console.log();
-//            return [marker.position, draggable, marker.label.toString()];
-//        };
 
         //pushing marker to the array
         markers.push(marker);
